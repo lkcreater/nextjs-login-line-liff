@@ -4,8 +4,10 @@ import { useLiff } from '@/contexts/LiffContext';
 import LiffProfile from '@/components/LiffProfile';
 import { liffLogin, liffLogout, sendMessages, closeLiffWindow, openExternalBrowser } from '@/lib/liff';
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 export default function Home() {
+  const router = useRouter();
   const { isReady, isLoggedIn, error, liffObject } = useLiff();
   const [message, setMessage] = useState('สวัสดีจาก LIFF App!');
   const [sending, setSending] = useState(false);
@@ -155,6 +157,12 @@ export default function Home() {
               {/* Action Buttons */}
               <div className="flex flex-wrap gap-3">
                 <button
+                  onClick={() => router.push('/scan')}
+                  className="bg-purple-500 hover:bg-purple-600 text-white font-medium py-2 px-6 rounded-lg transition-colors"
+                >
+                  📷 Scan QR Code
+                </button>
+                <button
                   onClick={handleLogout}
                   className="bg-orange-500 hover:bg-orange-600 text-white font-medium py-2 px-6 rounded-lg transition-colors"
                 >
@@ -170,7 +178,7 @@ export default function Home() {
                 )}
                 <button
                   onClick={handleOpenExternal}
-                  className="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-6 rounded-lg transition-colors"
+                  className="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-lg transition-colors"
                 >
                   เปิด External Browser
                 </button>
