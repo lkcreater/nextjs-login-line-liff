@@ -163,6 +163,12 @@ export default function Home() {
                   📷 Scan QR Code
                 </button>
                 <button
+                  onClick={() => router.push('/camera')}
+                  className="bg-indigo-500 hover:bg-indigo-600 text-white font-medium py-2 px-6 rounded-lg transition-colors"
+                >
+                  📸 ถ่ายภาพ
+                </button>
+                <button
                   onClick={handleLogout}
                   className="bg-orange-500 hover:bg-orange-600 text-white font-medium py-2 px-6 rounded-lg transition-colors"
                 >
