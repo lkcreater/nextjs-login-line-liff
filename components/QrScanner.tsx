@@ -6,13 +6,16 @@ import { Html5Qrcode } from 'html5-qrcode';
 interface QrScannerProps {
   onScanSuccess: (decodedText: string) => void;
   onScanError?: (error: string) => void;
+  onCapture?: (imageDataUrl: string) => void;
 }
 
-export default function QrScanner({ onScanSuccess, onScanError }: QrScannerProps) {
+export default function QrScanner({ onScanSuccess, onScanError, onCapture }: QrScannerProps) {
   const [isScanning, setIsScanning] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isMounted, setIsMounted] = useState(false);
   const scannerRef = useRef<Html5Qrcode | null>(null);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const qrCodeRegionId = 'qr-reader';
 
   const startScanner = async () => {
@@ -68,6 +71,39 @@ export default function QrScanner({ onScanSuccess, onScanError }: QrScannerProps
     }
   };
 
+  const capturePhoto = () => {
+    try {
+      // Get the video element from the scanner
+      const videoElement = document.querySelector(`#${qrCodeRegionId} video`) as HTMLVideoElement;
+
+      if (!videoElement || !canvasRef.current) {
+        console.error('Video element or canvas not found');
+        return;
+      }
+
+      const canvas = canvasRef.current;
+      const context = canvas.getContext('2d');
+
+      if (!context) return;
+
+      // Set canvas dimensions to match video
+      canvas.width = videoElement.videoWidth;
+      canvas.height = videoElement.videoHeight;
+
+      // Draw the current video frame to canvas
+      context.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
+
+      // Convert canvas to data URL
+      const imageDataUrl = canvas.toDataURL('image/jpeg', 0.9);
+
+      if (onCapture) {
+        onCapture(imageDataUrl);
+      }
+    } catch (err) {
+      console.error('Error capturing photo:', err);
+    }
+  };
+
   useEffect(() => {
     setIsMounted(true);
 
@@ -93,11 +129,14 @@ export default function QrScanner({ onScanSuccess, onScanError }: QrScannerProps
         {/* Scanner Container */}
         <div className="mb-4">
           {isMounted ? (
-            <div
-              id={qrCodeRegionId}
-              className="rounded-lg overflow-hidden border-2 border-gray-300"
-              style={{ minHeight: '300px' }}
-            />
+            <>
+              <div
+                id={qrCodeRegionId}
+                className="rounded-lg overflow-hidden border-2 border-gray-300"
+                style={{ minHeight: '300px' }}
+              />
+              <canvas ref={canvasRef} className="hidden" />
+            </>
           ) : (
             <div
               className="rounded-lg overflow-hidden border-2 border-gray-300 flex items-center justify-center bg-gray-100"
@@ -119,21 +158,33 @@ export default function QrScanner({ onScanSuccess, onScanError }: QrScannerProps
         )}
 
         {/* Control Buttons */}
-        <div className="flex gap-3">
+        <div className="space-y-3">
           {!isScanning ? (
             <button
               onClick={startScanner}
-              className="flex-1 bg-green-500 hover:bg-green-600 text-white font-medium py-3 px-6 rounded-lg transition-colors"
+              className="w-full bg-green-500 hover:bg-green-600 text-white font-medium py-3 px-6 rounded-lg transition-colors"
             >
               เริ่ม Scan
             </button>
           ) : (
-            <button
-              onClick={stopScanner}
-              className="flex-1 bg-red-500 hover:bg-red-600 text-white font-medium py-3 px-6 rounded-lg transition-colors"
-            >
-              หยุด Scan
-            </button>
+            <>
+              <div className="flex gap-3">
+                <button
+                  onClick={stopScanner}
+                  className="flex-1 bg-red-500 hover:bg-red-600 text-white font-medium py-3 px-6 rounded-lg transition-colors"
+                >
+                  หยุด Scan
+                </button>
+                {onCapture && (
+                  <button
+                    onClick={capturePhoto}
+                    className="flex-1 bg-blue-500 hover:bg-blue-600 text-white font-medium py-3 px-6 rounded-lg transition-colors"
+                  >
+                    📸 Capture
+                  </button>
+                )}
+              </div>
+            </>
           )}
         </div>
 

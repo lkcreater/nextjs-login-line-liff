@@ -8,6 +8,7 @@ export default function ScanPage() {
     const router = useRouter();
     const [scannedResult, setScannedResult] = useState<string | null>(null);
     const [scanHistory, setScanHistory] = useState<string[]>([]);
+    const [capturedPhoto, setCapturedPhoto] = useState<string | null>(null);
 
     const handleScanSuccess = (decodedText: string) => {
         setScannedResult(decodedText);
@@ -21,7 +22,20 @@ export default function ScanPage() {
     };
 
     const handleScanError = (error: string) => {
-        // console.error('Scan error:', error);
+        // Silently ignore scan errors to avoid console spam
+    };
+
+    const handleCapture = (imageDataUrl: string) => {
+        setCapturedPhoto(imageDataUrl);
+    };
+
+    const downloadPhoto = (dataUrl: string) => {
+        const link = document.createElement('a');
+        link.href = dataUrl;
+        link.download = `qr-scan-${Date.now()}.jpg`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
     };
 
     const copyToClipboard = (text: string) => {
@@ -66,8 +80,39 @@ export default function ScanPage() {
                     <QrScanner
                         onScanSuccess={handleScanSuccess}
                         onScanError={handleScanError}
+                        onCapture={handleCapture}
                     />
                 </div>
+
+                {/* Captured Photo */}
+                {capturedPhoto && (
+                    <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
+                        <h2 className="text-xl font-semibold mb-3 text-gray-800">
+                            📸 ภาพที่ถ่าย
+                        </h2>
+                        <div className="mb-3">
+                            <img
+                                src={capturedPhoto}
+                                alt="Captured QR"
+                                className="w-full rounded-lg border-2 border-gray-300"
+                            />
+                        </div>
+                        <div className="flex gap-3">
+                            <button
+                                onClick={() => downloadPhoto(capturedPhoto)}
+                                className="flex-1 bg-green-500 hover:bg-green-600 text-white font-medium py-2 px-4 rounded-lg transition-colors"
+                            >
+                                💾 ดาวน์โหลด
+                            </button>
+                            <button
+                                onClick={() => setCapturedPhoto(null)}
+                                className="flex-1 bg-gray-500 hover:bg-gray-600 text-white font-medium py-2 px-4 rounded-lg transition-colors"
+                            >
+                                ✖️ ปิด
+                            </button>
+                        </div>
+                    </div>
+                )}
 
                 {/* Current Scan Result */}
                 {scannedResult && (
@@ -133,6 +178,7 @@ export default function ScanPage() {
                         <li>กดปุ่ม "เริ่ม Scan" เพื่อเปิดกล้อง</li>
                         <li>นำกล้องไปส่องที่ QR Code</li>
                         <li>ระบบจะอ่านข้อมูลโดยอัตโนมัติ</li>
+                        <li>กดปุ่ม "📸 Capture" เพื่อถ่ายภาพ QR Code</li>
                         <li>สามารถคัดลอกหรือเปิดลิงก์ได้ทันที</li>
                     </ul>
                 </div>
